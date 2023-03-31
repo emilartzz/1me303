@@ -13,7 +13,7 @@ function createWindow () {
 
     win.setBackgroundColor("#000000");
     win.loadFile('./index.html');
-    win.setFullScreen(true);
+    win.setFullScreen(false);
 }
 
 app.whenReady().then(createWindow);

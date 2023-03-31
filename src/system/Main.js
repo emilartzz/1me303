@@ -29,7 +29,7 @@ Fighton.system.Main = function() {
         resources: Fighton.data.Requests,
         useGamepads:true,
         useKeyboard:true,
-        framerate: 30,
+        framerate: 60,
         debug: true
     });
 };

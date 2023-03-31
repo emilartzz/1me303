@@ -1,77 +1,124 @@
-//------------------------------------------------------------------------------
-// Constructor scope
-//------------------------------------------------------------------------------
+class Game extends rune.scene.Scene {
 
-/**
- * Creates a new object.
- *
- * @constructor
- * @extends rune.scene.Scene
- *
- * @class
- * @classdesc
- * 
- * Game scene.
- */
-Fighton.scene.Game = function() {
+  menu = null;
+  m_players = [];
+  m_cams = null;
+  m_camera_is_splitted = false;
+  m_rooms = [];
 
-    //--------------------------------------------------------------------------
-    // Super call
-    //--------------------------------------------------------------------------
-    
-    /**
-     * Calls the constructor method of the super class.
-     */
-    rune.scene.Scene.call(this);
-};
+  constructor() {
+    super();
+  }
 
-//------------------------------------------------------------------------------
-// Inheritance
-//------------------------------------------------------------------------------
+  init() {
+    super.init();
+    this.cameras.removeCameras(true);
 
-Fighton.scene.Game.prototype = Object.create(rune.scene.Scene.prototype);
-Fighton.scene.Game.prototype.constructor = Fighton.scene.Game;
+    const livingRoom = new LivingRoom();
+    this.m_rooms.push(livingRoom);
+    this.stage.addChild(livingRoom);
 
-//------------------------------------------------------------------------------
-// Override public prototype methods (ENGINE)
-//------------------------------------------------------------------------------
+    const Player1 = new Player(0);
+    this.m_players.push(Player1);
 
-/**
- * This method is automatically executed once after the scene is instantiated. 
- * The method is used to create objects to be used within the scene.
- *
- * @returns {undefined}
- */
-Fighton.scene.Game.prototype.init = function() {
-    rune.scene.Scene.prototype.init.call(this);
-    
-    var text = new rune.text.BitmapField("Hello World!");
+    const Player2 = new Player(1);
+    this.m_players.push(Player2);
+
+    const text = new rune.text.BitmapField("This is a test");
     text.autoSize = true;
-    text.center = this.application.screen.center;
-    
+
+    text.collition = true;
+
+    this.stage.addChild(Player1);
+    this.stage.addChild(Player2);
     this.stage.addChild(text);
-};
 
-/**
- * This method is automatically executed once per "tick". The method is used for 
- * calculations such as application logic.
- *
- * @param {number} step Fixed time step.
- *
- * @returns {undefined}
- */
-Fighton.scene.Game.prototype.update = function(step) {
-    rune.scene.Scene.prototype.update.call(this, step);
-};
+    var w = this.application.screen.width;
+    var h = this.application.screen.height;
 
-/**
- * This method is automatically called once just before the scene ends. Use 
- * the method to reset references and remove objects that no longer need to 
- * exist when the scene is destroyed. The process is performed in order to 
- * avoid memory leaks.
- *
- * @returns {undefined}
- */
-Fighton.scene.Game.prototype.dispose = function() {
-    rune.scene.Scene.prototype.dispose.call(this);
-};
+    this.m_cams = [];
+    this.m_cams[0] = this.cameras.createCamera(0, 0, w, h);
+    this.m_cams[0].zoom = 0.25;
+    this.m_cams[0].debug = true;
+    this.m_cams[0].targets.add(Player1);
+    this.m_cams[0].targets.add(Player2);
+
+    const counter = new rune.ui.Counter();
+    counter.x = 100;
+    counter.y = 100;
+    counter.value = 100;
+
+    this.stage.addChild(counter);
+
+    this.cameras.addCamera(this.m_cams[0]);
+  }
+
+  update(step) {
+    super.update(step);
+
+    this.m_players.forEach(player => {
+      player.updateInput(step);
+    });
+
+    if (this.m_players.length > 0) {
+      this.calcCamera();
+    }
+  }
+
+  dispose() {
+    super.dispose();
+  }
+
+  calcCamera() {
+
+    // console.log('Player One : ' + this.m_players[0].globalX);
+    // console.log('Player Two : ' + this.m_players[1].globalX);
+
+    var playerOnePos = { x: this.m_players[0].globalX, y: this.m_players[0].globalY };
+    var playerTwoPos = { x: this.m_players[1].globalX, y: this.m_players[1].globalY };
+
+    if (!this.m_camera_is_splitted) {
+      if (Math.abs(playerOnePos.x - playerTwoPos.x) > this.application.screen.width - 50 || Math.abs(playerOnePos.y - playerTwoPos.y) > this.application.screen.height - 50) {
+        this.cameras.removeCameras(true);
+        this.m_cams = [];
+
+        this.m_cams[0] = this.cameras.createCamera(0, 0, this.application.screen.width / 2, this.application.screen.height);
+        this.m_cams[1] = this.cameras.createCamera(this.application.screen.width / 2, 0, this.application.screen.width / 2, this.application.screen.height);
+
+        this.m_cams[1].targets.add(this.m_players[1]);
+        this.m_cams[0].targets.add(this.m_players[0]);
+
+        this.cameras.addCamera(this.m_cams[0]);
+        this.cameras.addCamera(this.m_cams[1]);
+
+        console.log(this.m_cams[0].targets.length);
+        console.log(this.m_cams[1].targets);
+
+        this.m_camera_is_splitted = true;
+
+      }
+    }
+
+    if (this.m_camera_is_splitted) {
+      // If users are close to each other, merge the cameras
+      if (Math.abs(playerOnePos.x - playerTwoPos.x) < this.application.screen.width - 50 && Math.abs(playerOnePos.y - playerTwoPos.y) < this.application.screen.height - 50) {
+        this.cameras.removeCameras(true);
+        this.m_cams = [];
+
+        this.m_cams[0] = this.cameras.createCamera(0, 0, this.application.screen.width, this.application.screen.height);
+        this.m_cams[0].targets.add(this.m_players[0]);
+        this.m_cams[0].targets.add(this.m_players[1]);
+
+        this.cameras.addCamera(this.m_cams[0]);
+
+        this.m_camera_is_splitted = false;
+      }
+    }
+
+
+  }
+
+
+}
+
+Fighton.scene.Game = Game;
