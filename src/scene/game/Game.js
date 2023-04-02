@@ -5,6 +5,7 @@ class Game extends rune.scene.Scene {
   m_cams = null;
   m_camera_is_splitted = false;
   m_rooms = [];
+  m_debug = true;
 
   constructor() {
     super();
@@ -13,10 +14,6 @@ class Game extends rune.scene.Scene {
   init() {
     super.init();
     this.cameras.removeCameras(true);
-
-    const livingRoom = new LivingRoom();
-    this.m_rooms.push(livingRoom);
-    this.stage.addChild(livingRoom);
 
     const Player1 = new Player(0);
     this.m_players.push(Player1);
@@ -27,7 +24,6 @@ class Game extends rune.scene.Scene {
     const text = new rune.text.BitmapField("This is a test");
     text.autoSize = true;
 
-    text.collition = true;
 
     this.stage.addChild(Player1);
     this.stage.addChild(Player2);
@@ -38,19 +34,16 @@ class Game extends rune.scene.Scene {
 
     this.m_cams = [];
     this.m_cams[0] = this.cameras.createCamera(0, 0, w, h);
-    this.m_cams[0].zoom = 0.25;
-    this.m_cams[0].debug = true;
     this.m_cams[0].targets.add(Player1);
     this.m_cams[0].targets.add(Player2);
 
-    const counter = new rune.ui.Counter();
-    counter.x = 100;
-    counter.y = 100;
-    counter.value = 100;
-
-    this.stage.addChild(counter);
-
     this.cameras.addCamera(this.m_cams[0]);
+
+    if (this.m_debug){
+      this.stage.forEachChild(child => {
+        child.debug = true;
+      });
+    }
   }
 
   update(step) {
@@ -70,9 +63,6 @@ class Game extends rune.scene.Scene {
   }
 
   calcCamera() {
-
-    // console.log('Player One : ' + this.m_players[0].globalX);
-    // console.log('Player Two : ' + this.m_players[1].globalX);
 
     var playerOnePos = { x: this.m_players[0].globalX, y: this.m_players[0].globalY };
     var playerTwoPos = { x: this.m_players[1].globalX, y: this.m_players[1].globalY };

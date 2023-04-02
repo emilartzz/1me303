@@ -4,100 +4,80 @@ class Player extends rune.display.Sprite {
     super(20, 20, 32, 32, "character");
     this.m_buttons = [];
     this.m_gamepad = null;
+    this.m_gamepads = Array();
     this.m_playerID = playerID || 0;
+    this.m_speed = .5;
+    this.m_currentRoom = null;
   }
 
   init() {
     super.init();
-    this.debug = true;
     this.characterAnimation();
+    this.m_initGamepad();
+
+    const text = new rune.text.BitmapField(this.m_playerID.toString());
+    text.autoSize = true;
+    this.addChild(text);
+
+
+  }
+
+  update(step) {
+    super.update(step);
+    this.updateInput(step);
   }
 
   m_initGamepad() {
     if (this.m_gamepad == null && this.gamepads != null) {
       this.m_gamepad = this.gamepads.get(this.m_playerID);
+      this.m_gamepads.push(this.m_gamepad);
     }
   }
 
-
   updateInput(step) {
+    this.updateKeyboard(step);
+    this.updateGamepad(step);
+  }
 
-    if (this.m_playerID == 0) {
-      if (this.keyboard.pressed('LEFT')) {
-        this.animation.gotoAndPlay("walk_left");
-        this.x -= .5;
-      }
+  updateGamepad() {
 
-      if (this.keyboard.pressed('RIGHT')) {
-        this.animation.gotoAndPlay("walk_right");
-        this.x += .5;
-      }
-
-      if (this.keyboard.pressed('UP')) {
-        this.animation.gotoAndPlay("walk_up");
-        this.y -= .5;
-      }
-
-      if (this.keyboard.pressed('DOWN')) {
-        this.animation.gotoAndPlay("walk_down");
-        this.y += .5;
-      }
-
-      if (this.keyboard.justReleased('LEFT')) {
-        this.animation.gotoAndPlay("idle_left");
-      }
-
-      if (this.keyboard.justReleased('RIGHT')) {
-        this.animation.gotoAndPlay("idle_right");
-      }
-
-      if (this.keyboard.justReleased('UP')) {
-        this.animation.gotoAndPlay("idle_up");
-      }
-
-      if (this.keyboard.justReleased('DOWN')) {
-        this.animation.gotoAndPlay("idle_down");
+    if (this.m_gamepad.connected){
+      if (this.m_gamepad.stickLeft){
+        this.x += this.m_gamepad.stickLeft.x * this.m_speed;
+        this.y += this.m_gamepad.stickLeft.y * this.m_speed;
       }
     }
-    else if (this.m_playerID == 1) {
-      if (this.keyboard.pressed('A')) {
-        this.animation.gotoAndPlay("walk_left");
-        this.x -= .5;
-      }
 
-      if (this.keyboard.pressed('D')) {
-        this.animation.gotoAndPlay("walk_right");
-        this.x += .5;
-      }
+  }
 
-      if (this.keyboard.pressed('W')) {
-        this.animation.gotoAndPlay("walk_up");
-        this.y -= .5;
-      }
+  updateKeyboard() {
 
-      if (this.keyboard.pressed('S')) {
-        this.animation.gotoAndPlay("walk_down");
-        this.y += .5;
-      }
-
-      if (this.keyboard.justReleased('A')) {
-        this.animation.gotoAndPlay("idle_left");
-      }
-
-      if (this.keyboard.justReleased('D')) {
-        this.animation.gotoAndPlay("idle_right");
-      }
-
-      if (this.keyboard.justReleased('W')) {
-        this.animation.gotoAndPlay("idle_up");
-      }
-
-      if (this.keyboard.justReleased('S')) {
-        this.animation.gotoAndPlay("idle_down");
-      }
+    if (this.keyboard.pressed(this.m_playerKeyboardControls[this.m_playerID].left)) {
+      this.x -= this.m_speed;
+      this.animation.gotoAndPlay("walk_left");
     }
-    else{
-      return;
+
+    if (this.keyboard.pressed(this.m_playerKeyboardControls[this.m_playerID].right)) {
+      this.x += this.m_speed;
+      this.animation.gotoAndPlay("walk_right");
+    }
+
+    if (this.keyboard.pressed(this.m_playerKeyboardControls[this.m_playerID].up)) {
+      this.y -= this.m_speed;
+      this.animation.gotoAndPlay("walk_up");
+    }
+
+    if (this.keyboard.pressed(this.m_playerKeyboardControls[this.m_playerID].down)) {
+      this.y += this.m_speed;
+      this.animation.gotoAndPlay("walk_down");
+    }
+
+    if (this.keyboard.pressed(this.m_playerKeyboardControls[this.m_playerID].sprint)) {
+      this.m_speed = 1;
+    }
+
+    if (this.keyboard.justReleased(this.m_playerKeyboardControls[this.m_playerID].sprint)) {
+      this.m_speed = .5;
     }
 
   }
@@ -127,4 +107,29 @@ characterAnims = {
   idle_right: [43, 47],
   idle_left: [49, 53],
 
+}
+
+Player.prototype.m_playerKeyboardControls = {
+  0: {
+    left: 'A',
+    right: 'D',
+    up: 'W',
+    down: 'S',
+    sprint: 'SHIFT'
+  },
+  1: {
+    left: 'LEFT',
+    right: 'RIGHT',
+    up: 'UP',
+    down: 'DOWN',
+    sprint: 'SHIFT'
+  }
+}
+
+Player.prototype.getCurrentRoom = function() {
+  return this.m_currentRoom;
+}
+
+Player.prototype.setCurrentRoom = function(room) {
+  this.m_currentRoom = room;
 }

@@ -44,5 +44,4 @@ Fighton.data.Requests.prototype.constructor = Fighton.data.Requests;
 Fighton.data.Requests.prototype.m_construct = function() {
     rune.resource.Requests.prototype.m_construct.call(this);
     this.add("character", "./../asset/character.png");
-	this.add("floor", "./../asset/floor.jpeg");
 };
